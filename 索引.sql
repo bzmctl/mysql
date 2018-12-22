@@ -40,6 +40,7 @@ HASH索引和BTREE索引，默认为前者。
 5.多列索引
 6.空间索引*/
 /*10.1.3 索引的设计原则
+********************************本章难点**************************
 为了使索引的使用效率更高，在创建索引时，必须考虑在哪些字段上创建索引以及
 创建什么类型的索引。
 	1.选择唯一性索引
@@ -52,7 +53,7 @@ HASH索引和BTREE索引，默认为前者。
 /*10.2 创建和查看索引*/
   /*创建索引是指在某个表的一个或多个列上建立一个索引，以便提高对表的访问
 
-速。创建索引的方式有三种，分别是在创建表时创建，在已经存在的表中创建和
+速度。创建索引的方式有三种，分别是在创建表时创建，在已经存在的表中创建和
 
 使ALTER TABLE语句来创建。*/
 
@@ -254,8 +255,173 @@ USE school;
 CREATE TABLE t10_class(
   cno INT(4),
   cname VARCHAR(20),
-  loc VARCHAR(40));
+  loc VARCHAR(40))ENGINE=MYISAM;
 /*步骤三：使用ALTER TABLE语句在表t10_class中创建loc字段的全文索引*/
 ALTER TABLE t10_class ADD FULLTEXT INDEX index_loc(loc);
 /*步骤四：使用SHOW CREATE TABLE查看创建表信息。*/
 SHOW CREATE TABLE t10_class \G
+
+/*10.2.10 多列索引---创建表时自动创建*/
+  /*所谓多列索引，是指在创建索引时，所关联的字段不是一个字段，而是
+多个字段，虽然可以通过所关联的字段进行查询，但是只有查询条件中使用了
+所关联字段中的第一个字段，多列索引都会被使用。
+SQL语法：
+CREATE TABLE tablename(
+  propname type1[CONSTRAINT1],
+  ...
+  propname typen[CONSTRAINTn],
+INDEX|KEY [indexname]
+(propname1[(length)][ASC|DESC],
+...,
+propnamen[(length)][ASC|DESC]));
+上述语句中，关联的字段至少大于一个字段。
+*/
+/*示例10-10 执行SQL语句INDEX，在数据库school中，使用表t10_class的cname和
+  loc字段创建多列索引。
+步骤一：创建并选择数据库school*/
+CREATE DATABASE school;
+USE school;
+/*步骤二：执行SQL语句，在创建班级表t10_class时，在字段cname和loc上创建
+  多列索引。*/
+CREATE TABLE t10_class(
+  cno INT(4),
+  cname VARCHAR(20),
+  loc VARCHAR(40),
+  INDEX index_cname_loc(cname,loc));
+/*步骤三：检验索引是否创建成功*/
+SHOW CREATE TABLE t10_class \G
+/*步骤四：检验索引是否被使用*/
+EXPLAIN SELECT * FROM t10_class WHERE cname='beijing' \G
+/*10.2.11 多列索引---在已经存在的表上创建索引*/
+-- 语法形式：
+-- CREATE INDEX indexname ON tablename
+-- (propname1[(length)][ASC|DESC],...,propnamen[(length)][ASC|DESC]);
+-- 示例10-11执行SQL语句，在数据库school中的表t10_class的cname和loc字段
+-- 上创建多列索引。
+--步骤一：创建并选择数据库school*/
+CREATE DATABASE school;
+USE school;
+/*步骤二：执行SQL语句，创建班级表t10_class*/
+CREATE TABLE t10_class(
+  cno INT(4),
+  cname VARCHAR(20),
+  loc VARCHAR(40));
+-- 步骤三：执行SQL语句，在数据库school中的表t10_class的cname和loc字段
+-- 上创建多列索引。
+CREATE INDEX indexname_cname_loc ON t10_class(cname,loc);
+/*步骤四：检验索引是否创建成功*/
+SHOW CREATE TABLE t10_class \G
+--10.2.12 多列索引---通过ALTER TABLE语句创建
+-- SQL语法：
+/*
+ALTER TABLE tablename
+ADD INDEX|KEY indexname (propname1[(length)][ASC|DESC],
+...,
+propnamen[(length)][ASC|DESC]);
+*/
+-- 示例10-12 执行SQL语句CREATE INDEX，在数据库school中的表t10_class的
+--cname和loc字段上创建多列索引。
+--步骤一：创建并选择数据库school*/
+CREATE DATABASE school;
+USE school;
+/*步骤二：执行SQL语句，创建班级表t10_class*/
+CREATE TABLE t10_class(
+  cno INT(4),
+  cname VARCHAR(20),
+  loc VARCHAR(40));
+-- 步骤三：执行SQL语句CREATE INDEX，在数据库school中的表t10_class的
+--cname和loc字段上创建多列索引。
+ALTER TABLE t10_class ADD INDEX index_cname_loc(cname,loc);
+/*步骤四：检验索引是否创建成功*/
+SHOW CREATE TABLE t10_class \G
+
+-- 10.2.13 通过SQLyog创建和修改索引
+-- 10.3 删除索引
+-- 10.3.1 删除索引的语法形式
+-- DROP INDEX indexname ON tablename;
+-- 示例10-14 执行SQL语句DROP INDEX，在数据库school中删除表t10_class中
+-- 的索引对象index_cname_loc。
+-- 步骤一：选择数据库school，并查看表t10_class信息
+USE school;
+SHOW CREATE TABLE t10_class \G
+-- 步骤二：检查表t10_class中索引是否被使用
+EXPLAIN SELECT * FROM t10_class WHERE cname='class_1' \G
+-- 步骤三：删除索引并查看表信息
+DROP INDEX index_cname_loc ON t10_class;
+SHOW CREATE TABLE t10_class \G
+
+-- 10.4 综合示例---创建索引
+-- 数据库company中有一个部门t10_dept表和员工t10_employee表
+-- 步骤一：创建数据库company并使用数据库
+CREATE DATABASE company;
+USE company;
+-- 步骤二：创建部门表t10_dept，在deptid上创建名为index_did的唯一索引，
+-- 并以升序排列；在deptname和function字段上创建名为index_dname的多列索
+-- 引；在description字段上创建名为index_desc的全文索引。
+CREATE TABLE t10_dept(
+  deptid INT(4) NOT NULL UNIQUE PRIMARY KEY AUTO_INCREMENT,
+  deptname VARCHAR(20) NOT NULL,
+  function VARCHAR(30) NOT NULL,
+  description TEXT,
+  UNIQUE INDEX index_did(deptid ASC),
+  INDEX index_dname(deptname,function),
+  FULLTEXT INDEX index_desc(description))ENGINE=MYISAM;
+--步骤三：创建员工表
+CREATE TABLE t10_employee(
+  id INT(4),
+  name VARCHAR(20),
+  gender VARCHAR(6),
+  age INT(4),
+  salary INT(6),
+  deptid INT(4));
+-- 步骤四：在员工表的name字段上创建索引
+CREATE INDEX index_name ON t10_employee(name);
+-- 步骤五：在员工表的age字段上创建索引
+CREATE INDEX index_age ON t10_employee(age);
+-- 步骤六：创建名为index_id的唯一索引
+ALTER TABLE t10_employee ADD UNIQUE INDEX index_id(id ASC);
+-- 步骤七：查看t10_employee的表结构
+SHOW CREATE TABLE t10_employee \G
+-- 步骤八：删除t10_dept表上的index_dname索引，再查看其表结构
+DROP INDEX index_dname ON t10_dept;
+SHOW CREATE TABLE t10_dept \G
+-- 步骤九：删除t10_empoyee表上的index_name索引，再查看其表结构
+DROP INDEX index_name ON t10_employee;
+SHOW CREATE TABLE t10_employee \G
+
+-- 10.5 经典习题与面试题
+-- 1.经典习题
+-- 在school数据库中创建学生数据表t10_student，表结构如表10-3所示，按要
+-- 求操作。
+-- （1）数据库school中创建学生表t10_student，存储引擎为MYISAM，创建表
+-- 的同时在stuid字段上添加index_stu_id的唯一索引。
+CREATE DATABASE school;
+USE school;
+CREATE TABLE t10_student(
+  id INT(4) NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '学生ID',
+  name VARCHAR(20) COMMENT '学生姓名',
+  gender VARCHAR(20) COMMENT '学生性别',
+  age VARCHAR(20) COMMENT '学生年龄',
+  info TEXT COMMENT '学生简介',
+  UNIQUE INDEX index_stu_id(id))ENGINE=MYISAM;
+SHOW CREATE TABLE t10_student \G
+-- （2）使用CREATE INDEX在gender和age字段上建立名称为index_multi的多列索引。
+CREATE INDEX index_multi ON t10_student(gender,age);
+SHOW CREATE TABLE t10_student \G
+-- （3）使用ALTER TABLE语句在name字段上建立index_name的普通索引。
+ALTER TABLE t10_student ADD INDEX index_name(name);
+SHOW CREATE TABLE t10_student \G
+-- （4）使用CREATE INDEX语句在info字段上建立名为index_info_full的全文
+-- 索引。
+CREATE FULLTEXT INDEX index_info_full ON t10_student(info);
+SHOW CREATE TABLE t10_student \G
+-- （5）删除名称为index_info_full的全文索引
+DROP INDEX index_info_full ON t10_student;
+SHOW CREATE TABLE t10_student \G
+-- 2.面试题及解答
+-- （1）应该如何使用索引？
+-- （2）是否尽量使用短索引？
+-- （3）MySQL中主键，索引和唯一性的区别是什么？
+-- 10.6 本章小结
+-- 本章介绍了索引的基础知识，创建，查看，删除索引的方法。创建是本章重
+-- 点。必须掌握三种创建索引的方法。设计索引的基本原则是本章的难点。
