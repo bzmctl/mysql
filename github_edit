@@ -1,1 +1,3 @@
    在github上添加的文件，演示远程仓库发生变化时，本地仓库如何操作。
+git fetch origin
+git merge origin/master
