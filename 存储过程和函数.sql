@@ -230,3 +230,195 @@ CLOSE cur_employee;
 提示：如果存储过程或函数执行了SELECT语句，并且SELECT语句会查询出多条记录，这种
 情况最好使用光标来读取记录，光标必须在处理程序之前和在条件之后声明，而且光标使用
 完之后一定要关闭。
+12.1.6 流程控制的使用
+1.IF语句：用来进行条件判断，根据条件执行不同语句，语法基本形式如下：
+IF search_condition THEN statement_list;
+  [ELSEIF search_condition THEN statement_list1]...;
+  [ELSE statement_listn];
+END IF;
+【示例12-12】下面是一个IF语句的示例。
+IF age>20 THEN SET @count1=@count1+1;
+  ELSEIF age=20 THEN @count2=@count2+1;
+  ELSE @count3=@count3+1;
+END IF;
+2.CASE语句：可实现比IF语句更复杂的条件判断，语法基本形式如下：
+CASE case_value
+  WHEN when_value THEN statement_list;
+  [WHEN when_value1 THEN statement_list1];
+  ...;
+  [ELSE statement_listn];
+END CASE
+CASE语句的另一种形式，其基本语法如下：
+CASE case_value
+  WHEN search_condition THEN statement_list;
+  ...;
+  [ELSE statement_listn];
+END CASE;
+【示例12-13】下面是一个CASE语句的示例。
+CASE age
+  WHEN 20 THEN SET @count1=@count1+1;
+  ELSE SET @count2=@count2+1;
+END CASE;
+3.LOOP语句：用来实现简单循环，但其本身不停止循环，
+只有遇到能使其停止循环的语句才会停止循环。语句形式如下：
+[begin_label:]LOOP
+  statement_list;
+END LOOP[end_label];
+【示例12-14】LOOP示例。
+add_num:LOOP
+  SET @count=@count+1;
+END LOOP add_num;
+4.LEAVE语句：用于跳出循环控制。语法形式：
+LEAVE label;			--label表示循环标志
+【示例12-15】LEAVE示例。
+add_num:LOOP
+  SET @count=count+1;
+  IF @count=100 THEN
+    LEAVE add_num;
+END LOOP add_num;
+5.ITERATE语句：用于跳出本次循环进入下一个循环。
+语法形式：
+ITERATE label;--label表示循环标志
+【12-16】ITERATE示例。
+add_num:LOOP
+  SET @count=@count+1;
+  IF @count=100 THEN
+    LEAVE add_num;
+  ELSE IF MOD(@count,3)=0 THEN
+    ITERATE add_num;
+  SELECT * FROM employee;
+END LOOP add_num;
+6.REPEAT语句：有条件控制的循环，当满足特定条件时就会结束循环。
+语法形式：
+[begin_label:]REPEAT
+  statement_list;
+  UNTIL search_condition
+END REPEAT [end_label];
+【示例12-17】REPEAT示例。
+REPEAT
+  SET @count=@count+1;
+  UNTIL @count=100
+END REPEAT
+7.WHILE语句：有条件控制的循环语句，当条件满足时执行循环语句。
+语法形式如下：
+[begin_label:]WHILE search_condition DO
+  statement_list;
+END WHILE [end_label];
+【示例12-18】WHILE语句示例。
+WHILE @count<100 DO
+  SET @count=@count+1;
+END WHILE;
+12.1.7 通过SQLyog创建存储过程
+【12-19】与示例12-1和12-2一样，在company中创建存储过程proc_employee
+和函数func_employee。
+12.2 调用存储过程和函数
+语法：
+CALL proc_name(paramter[,...]);
+【示例12-20】定义一个存储过程然后调用这个存储过程。
+DELIMITER $$
+CREATE PROCEDURE proc_employee_sp(IN empid INT,OUT sal INT)
+COMMENT '查询某个员工的薪水'
+BEGIN
+  SELECT salary
+  FROM t_employee WHERE id=empid;
+END$$
+DELIMITER ;
+CALL proc_employee_sp(1002,@n);
+12.2.2 调用存储函数
+【示例12-21】定义一个存储函数，然后调用它。
+DELIMITER $$
+
+CREATE
+    /*[DEFINER = { user | CURRENT_USER }]*/
+    FUNCTION `company`.`func_employee_sp`(id INT)
+    RETURNS INT
+    /*LANGUAGE SQL
+    | [NOT] DETERMINISTIC
+    | { CONTAINS SQL | NO SQL | READS SQL DATA | MODIFIES SQL DATA }
+    | SQL SECURITY { DEFINER | INVOKER }
+    | COMMENT 'string'*/
+    BEGIN
+	RETURN(SELECT salary FROM t_employee WHERE t_employee.id=id);
+    END$$
+
+DELIMITER ;
+SELECT func_employee_sp(1002);
+12.3查看存储过程和函数
+12.3.1 使用SHOW STATUS语句查看存储过程和函数的状态
+SHOW {PROCEDURE|FUNCTION}STATUS{LIKE 'pattern'}
+【示例12-22】
+SHOW PROCEDURE STATUS LIKE 'proc_employee_sp' \G
+【示例12-23】
+SHOW FUNCTION STATUS LIKE 'func_employee_sp' \G
+12.3.2 使用SHOW CREATE语句查看存储过程和函数的状态
+SHOW CREATE {PROCEDURE|FUNCTION} proc_name
+【示例12-24】查看存储过程proc_employee的状态。
+SHOW CREATE PROCEDURE proc_employee_sp \G
+【示例12-25】查看存储函数func_employee的状态。
+SHOW CREATE FUNCTION func_employee_sp \G
+12.3.3 从information_schema.Routine表中查看存储过程和函数的信息
+SELECT * FROM information.schema.Routines WHERE ROUTINE_NAME='proc_name';
+【示例12-26】从Routine表中查询名为proc_employee的存储过程信息。
+SELECT * FROM information.schema.Routines WHERE ROUTINE_NAME='proc_employee' \G
+【示例12-27】从Routine表中查询名为func_employee的存储函数信息。
+SELECT * FROM information.schema.Routines WHERE ROUTINE_NAME='func_employee' \G
+12.4修改存储过程和函数
+12.4.1 修改存储过程和函数语法
+ALTER {PROCEDURE|FUNCTION} proc_name[characteristic....];
+  characteristic:
+    LANGUAGE SQL
+    [NOT] DETERMINISTIC
+    { CONTAINS SQL | NO SQL | READS SQL DATA | MODIFIES SQL DATA }
+    SQL SECURITY { DEFINER | INVOKER }
+    COMMENT 'string'
+提示：修改存储过程和修改存储函数两者的语句结构一样，而且它们与创建时的语句
+也基本一样。
+【示例12-28】修改存储过程proc_employee的定义，将读写权限改写为MODIFIES SQL DATA,
+并指明调用者可以执行。
+ALTER PROCEDURE proc_employee
+  MODIFIES SQL DATA SQL SECURITY INVOKER;
+查看修改是否成功
+SELECT specific_name,sql_data_access,security_type FROM information_schema.Routines
+  WHERE routine_name='proc_employee';
+【示例12-29】修改存储函数func_employee的定义，将读写权限改为READS SQL DATA，并加上注释
+信息'FINDER NAME'。
+ALTER FUNCTION company.func_employee READS SQL DATA COMMENT 'FIND NAME';
+查看是否修改成功
+SELECT specific_name,sql_data_access,routine_comment FROM information_schema.Routines
+  WHERE routine_name='func_employee';
+12.4.2 使用SQLyog修改存储过程和函数
+12.5 删除存储过程和函数
+  存储过程和函数的操作包括创建、查看、更新以及删除。在MySQL软件中可以有两种方式来删除存储
+过程和函数，分别为通过DROP PROCEDURE/FUNCTION语句和通过工具来实现删除存储和函数。
+12.5.1 删除存储过程和函数的语法
+  1.删除存储过程
+  语法：DROP PROCEDURE proc_name;
+  【12-31】执行SQL语句DROP PROCEDURE，删除存储过程对象proc_employee。
+  步骤一：创建数据库、表、存储过程及插入数据工作已经在12-1中已经完成，本示例延用。
+  步骤二：选择数据库
+    USE company;
+  步骤三：使用DROP PROCEDURE删除存储过程对象proc_employee。
+    DROP PROCEDURE proc_employee;
+  步骤四：查看删除是否成功。
+SELECT * FROM information_schema.routines WHERE
+SPECIFIC_NAME='proc_employee' \G
+  2.删除函数
+  12.5.1 删除存储过程和函数的语法
+  1.删除存储函数
+  语法：DROP FUNCTION func_name;
+  【12-32】执行SQL语句DROP FUNCTION，删除存储函数对象func_employee。
+  步骤一：创建数据库、表、存储函数及插入数据工作已经在12-1中已经完成，本示例延用。
+  步骤二：选择数据库
+    USE company;
+  步骤三：使用DROP FUNCTION删除存储函数对象func_employee。
+    DROP FUNCTION func_employee;
+  步骤四：查看删除是否成功。
+SELECT * FROM information_schema.routines WHERE
+SPECIFIC_NAME='func_employee' \G
+12.5.2使用SQLyog删除存储过程和函数
+/*12.6 综合示例---创建存储过程和函数*/
+步骤一:创建数据库Company,并选择数据库
+步骤二:创建员工表t_employee并向其中插入数据
+步骤三:创建并运行count_employee()函数统计员工人数
+步骤四:创建存储过程count_employee,调用函数count_employee获取t_employee
+表的记录数据,记录表t_employee中salary的平均值
