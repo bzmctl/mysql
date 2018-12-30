@@ -417,8 +417,113 @@ SELECT * FROM information_schema.routines WHERE
 SPECIFIC_NAME='func_employee' \G
 12.5.2使用SQLyog删除存储过程和函数
 /*12.6 综合示例---创建存储过程和函数*/
-步骤一:创建数据库Company,并选择数据库
-步骤二:创建员工表t_employee并向其中插入数据
-步骤三:创建并运行count_employee()函数统计员工人数
-步骤四:创建存储过程count_employee,调用函数count_employee获取t_employee
-表的记录数据,记录表t_employee中salary的平均值
+步骤一:创建数据库company,并选择数据库
+CREATE DATABASE company;
+USE company;
+-- 步骤二:创建员工表t_employee并向其中插入数据
+CREATE TABLE t_employee(
+  id INT(4) NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '员工ID',
+  name VARCHAR(20) COMMENT '员工名',
+  gender VARCHAR(6) COMMENT '性别',
+  age INT(4) COMMENT '年龄',
+  salary INT(6) COMMENT '薪水',
+  deptno INT(4) COMMENT '部门编号');
+INSERT INTO t_employee(id,name,gender,age,salary,deptno)
+VALUES(1001,'Alicia Florric','Female',33,10000,1),
+(1002,'Kalinda Sharma','Female',31,9000,2),
+(1003,'Cary Agos','Male',27,8000,3),
+(1004,'Eli Gold','Male',44,20000,2);
+-- 步骤三:创建并运行count_employee()函数统计员工人数
+DELIMITER $$
+CREATE FUNCTION count_employee()
+RETURNS INT(6)
+COMMENT '统计员工人数'
+BEGIN
+  RETURN(SELECT COUNT(*) FROM t_employee);
+END$$
+DELIMITER ;
+-- 步骤四:创建存储过程count_employee,调用函数count_employee获取t_employee
+-- 表的记录数据,记录表t_employee中salary的平均值。
+DELIMITER $$
+CREATE PROCEDURE count_employee()
+COMMENT '调用函数count_employee并统计表t_employee中salary的平均值'
+BEGIN
+  SELECT count_employee();
+  SELECT AVG(salary) FROM t_employee;
+END$$
+DELIMITER ;
+
+CALL count_employee();
+/*12.7 经典习题与面试题
+  （1）在综合示例的t_employee表上创建存储过程proc_employee，输入参数param，
+输出参数result。
+当参数param为“a”时计算表t_employee中所有员工的平均年龄，输出到参数result中；
+当参数param为“b”时计算表t_employee中所有员工的平均工资，输出到参数result中；
+当参数param为“c”时计算表t_employee中所有男员工的平均工资，输出到参数result中；
+当参数param为“d”时计算表t_employee中所有女员工的平均工资，输出到参数result中。*/
+DELIMITER $$
+CREATE PROCEDURE proc_employee(IN param VARCHAR(1),OUT result INT(10))
+BEGIN
+  CASE param
+    WHEN 'a' THEN SELECT AVG(age) INTO result FROM t_employee;
+    WHEN 'b' THEN SELECT AVG(salary) INTO result FROM t_employee;
+    WHEN 'c' THEN SELECT AVG(salary) INTO result FROM t_employee WHERE gender='Male';
+    WHEN 'd' THEN SELECT AVG(salary) INTO result FROM t_employee WHERE gender='Female';
+  END CASE;
+END$$
+DELIMITER ;
+CALL proc_employee('a',@123);
+SELECT @123;
+CALL proc_employee('b',@123);
+SELECT @123;
+CALL proc_employee('c',@123);
+SELECT @123;
+CALL proc_employee('d',@123);
+SELECT @123;
+--  （2）创建存储函数func_employee实现习题（1）的功能。
+DELIMITER $$
+CREATE FUNCTION func_employee(param VARCHAR(1))
+RETURNS INT(6)
+BEGIN
+  CASE param
+    WHEN 'a' THEN RETURN(SELECT AVG(age) FROM t_employee);
+    WHEN 'b' THEN RETURN(SELECT AVG(salary) FROM t_employee);
+    WHEN 'c' THEN RETURN(SELECT AVG(salary) FROM t_employee WHERE gender='Male');
+    WHEN 'd' THEN RETURN(SELECT AVG(salary) FROM t_employee WHERE gender='Female');
+    ELSE RETURN -1;
+  END CASE;
+END$$
+DELIMITER ;
+SELECT func_employee('a');
+SELECT func_employee('b');
+SELECT func_employee('c');
+SELECT func_employee('d');
+--  （3）删除习题（1）的存储过程，删除习题（2）的存储函数。
+DROP PROCEDURE proc_employee;
+DROP FUNCTION func_employee;
+2.面试题及解答
+  （1）MySQL中存储过程与函数有什么区别？
+	本质上它们都是存储过程，存储过程的参数有三类，分别是IN,OUT,INOUT。
+通过OUT与INOUT可以将存储过程执行的结果输出，而且存储过程可以有多个OUT,INOUT
+类型的变量，可以输出多个值。
+	存储函数中的参数都是输入参数，函数中的运行结果通过RETURN语句返回。RETURN
+语句只有一个结果。
+  （2）存储过程中的代码可以改变吗？
+  MySQL还不提供对已存在的存储过程代码的修改，如果必须修改，可先作用DROP语句删除之后，
+再重新编写代码，创建一个新的存储过程。
+  （3）存储过程中可以调用其它存储过程吗？
+	存储过程包括用户定义的SQL语句集合，可以使用CALL语句调用存储过程，当然在存储
+过程中可以调用其它存储过程，但不可通过DROP语句删除其它存储过程。
+  （4）存储过程中的参数可以和表中字段名同名吗？
+  不可。
+  （5）存储过程的参数可以使用中文吗？
+	在定义存储过程参数时在其后面加上字符编码格式，
+	如：CREATE PROCEDURE goosInfo(IN g_name VARCHAR(50) character set gbk,OUT g_price INT);
+  （6）存储函数和MySQL内部函数有什么区别？
+  从原理上讲，它们是一样的，只是内部函数比较常用，所以被数据库设计者集成到了数据库中。
+而且存储函数和MySQL内部函数调用方式是一样的。
+12.8 本章小结
+     本章介绍了MySQL数据库中的存储过程和存储函数。它们都是用户自己定义的SQL语句的集合。
+它们都存储在服务器端，只要调用就可以在服务器端执行。
+  本章重难点是存储过程和存储函数的创建，尤其是变量、条件、光标和流程控制的使用。须结合
+本章知识与实际操作进行练习。下一章将介绍触发器相关知识。
