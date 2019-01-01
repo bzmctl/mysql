@@ -3,3 +3,4 @@
 第九章 外连接
 第十章 EXPLAIN命令
 第十章 查看视图，SHOW TABLE STATUS和通过information_schema.views表中查看
+第十三章 触发器执行顺序
