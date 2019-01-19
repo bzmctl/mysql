@@ -84,3 +84,20 @@ SHOW BINARY LOGS;
 SHOW BINARY LOGS;
 步骤三：
 RESET MASTER;
+17.3 操作错误日志
+17.3.1 启动错误日志
+  错误日志默认开启且无法关闭，默认存储在MySQL数据库的数据文件夹下，默认文件名为
+hostname.err，如需修改可在my.ini或my.cnf中添加
+log_error=[path/[filename]]
+17.3.2 查看错误日志
+【示例17-8】查看MySQL错误日志
+SHOW VARIABLES LIKE 'log_err%';
+17.3.3 删除错误日志
+MySQL错误日志以文本形式存储在文件系统中，可直接删除，需重启MySQL
+mysqladmin -uroot -p flush-logs
+或者在客户端登陆MySQL执行flush-logs
+17.4 通用查询日志
+17.4.1 启用通用查询日志
+17.4.2 查看通用查询日志
+17.4.3 停止通用查询日志
+17.4.4 删除通用查询日志
