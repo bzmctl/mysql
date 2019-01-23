@@ -1,4 +1,11 @@
-/*---------------------------------单表查询。-------------------------*/
+/*--------------------------第八章 单表查询。-------------------*/
+MySQL中，SELECT语句的基本语法
+SELECT field1,field2,...,fieldn
+FROM tablename
+[WHERE CONDITION]
+GROUP BY fieldm [HAVING CONDITION]
+[ORDER BY fieldn[ASC|DESC]]
+LIMIT M,N
 /*8.1 基本数据记录查询*/
 /*8.1.1 查询所有字段数据*/
 /*1.列出表的所有字段*/
@@ -451,9 +458,9 @@ SELECT department,COUNT(id) number FROM t_stu GROUP BY department;
 SELECT c_name,MAX(grade) score FROM t_sco GROUP BY c_name;
 
 /*8.7 -------------经典习题与面试题---------------*/
-/*
+1. 经典习题
 对8.3节s_teacher表进行如下查询。
-  (1)计算s_teacher表所有教师的出生年份，并显示结果中的字段别名为birth_year。*/
+  (1)计算s_teacher表所有教师的出生年份，并显示结果中的字段别名为birth_year。
 SELECT name,2018-age birth_day FROM s_teacher;
 /*(2)用函数MIN()查询工资最低的教师的信息。*/
 SELECT * FROM s_teacher WHERE salary IN (SELECT MIN(salary) FROM s_teacher);
@@ -469,3 +476,20 @@ SELECT * FROM s_teacher WHERE name REGEXP '^w.t$';
 SELECT * FROM s_teacher WHERE name REGEXP '^wt+t$';
 SELECT * FROM s_teacher WHERE name REGEXP '^wt+t$';
 SELECT * FROM s_teacher WHERE name REGEXP 'ar{1,3}';
+2.面试题及解答
+（1）MySQL中通配符与正则表达式有什么区别？
+    MySQL中，它们都是用来进行字符串匹配的，都可进行模糊查询。通配符与LIKE一起用，
+而且使用范围有限；而正则表达式是要与REGEXP关键字一起使用。
+（2）什么情况下使用LIMIT来限制查询结果数量？
+    查询语句得到很多结果时，而用户只是需要很少一部分。这就需要来限制查询数量。LIMIT
+关键字可以指定查询结果从哪条记录开始，并显示多少条记录。
+（3）集合函数必须要用GROUP BY关键字吗？
+    不是必须，但是集合函数一般还是与GROUP BY关键字一起使用，因为集合函数一般用来计算
+某一类数据的总量，平均值等。
+（4）DISTINCT可以应用于所有列吗？
+    应用于所有列，只有所有列全相同就不显示，否则就会被查询出来。
+（5）为什么使用通配符格式正确却没有查找出符合条件的记录？
+    注意记录中字符串两段是否带有空格，如果有用TRIM函数将其去除之后再匹配。
+8.8 本章小结
+    本章介绍了MySQL中的单表查询操作，包括基本查询，条件查询，统计函数，
+分组查询，正则表达式查询。

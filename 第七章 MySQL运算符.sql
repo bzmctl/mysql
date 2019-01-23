@@ -1,6 +1,20 @@
 ------------------第七章 MySQL运算符-------------------
+本章内容：
+  算术运算符
+  比较运算符
+  逻辑运算符
+  位运算符
+  运算符的优先级
+7.1运算符简介
+（1）算术运算符：包括加减乘除模，用在数值计算上
+（2）比较运算符：大于，小于，等于，不等于，为空，用于数值比较，字符串匹配。
+LIKE,IN,BETWEEN AND和IS NULL,NULL也是比较运算符，还有用正则表达式REGEXP
+也是比较运算符。
+（3）逻辑运算符：与，或，非，异或等逻辑运算。运算返回结果为1或0。
+（4）位运算符：包括按位与，按位或，按位异或，按位左移，按位右移等位运算。运算对象
+为二进制。
 USE school;
-/*------------算术运算符---------------------*/
+7.2 算术运算符
 CREATE TABLE t_student(
 	id INT(11) NOT NULL PRIMARY KEY,
 	NAME VARCHAR(20) NOT NULL,
@@ -36,8 +50,8 @@ WHERE stu.id=sco.stuid;
 /*验证mysql中(除法/)和(取模%)操作*/
 SELECT 8/0 除法操作,9 DIV 0 除法操作,4%0 求模操作,7 MOD 0 求模操作;
 
-/*--------------------比较运算符---------------------*/
-/*常用的比较运算符*/
+7.3 比较运算符
+7.3.1 常用的比较运算符
 
 /*执行=和<=>比较运算符的SQL语句的SELECT*/
 SELECT 
@@ -61,7 +75,7 @@ SELECT NULL!=NULL 'NULL的！=效果',NULL<>NULL 'NULL的<>效果';
 SELECT 1>=1 数值比较,'abcde'<'abecd' 字符串比较,1+3<=3+5 表达式比较,
 1>2 数值比较,'eof'<='zoo' 字符串比较,3+5>=8+1 表达式比较;
 
-/*----------特殊功能的比较运算符-----------------------*/
+7.3.2 特殊功能的比较运算符
 /*实现特殊功能的比较运算符包含
 实现判断是否存在于指定范围的BETWEEN AND(值必须大于等于m且小于n才返回1)
 实现判断是否为空的IS NULL
@@ -70,14 +84,19 @@ SELECT 1>=1 数值比较,'abcde'<'abecd' 字符串比较,1+3<=3+5 表达式比�
 实现通配符的LIKE
 和实现正则表达式匹配的REGEXP
 */
+1. IS NULL运算符
 SELECT 8 IS NULL,NULL IS NULL;
+2. IS NOT NULL运算符
 SELECT 8 IS NOT NULL,NULL IS NOT NULL;
+3. LIKE运算符
 SELECT 'songofice&fire' LIKE 'ice%',
 	'songofice&fire' LIKE '%ice%',
 	'songofice&fire' LIKE '%eci%';
+4. BETWEEN AND运算符
 SELECT 27 BETWEEN 18 AND 30,9 BETWEEN 5 AND 10;
+5. IN运算符
 SELECT 4 IN (3,4,5), 'a' IN ('a','b','c','d'),10 IN (7,8,9);
-/*-------------------REGEXP运算符-------------------*/
+6. REGEXP运算符
 /*mysql支持的模式字符
 ^ 匹配字符串开始部分
 $ 匹配字符串结尾部分
@@ -108,18 +127,18 @@ SELECT 'fivelittleducks' REGEXP 't{3}' 匹配3个t,
        'fivelittleducks' REGEXP 'v{1,5}' 匹配至少1个至多5个,
        'fivelittleducks' REGEXP 'du{1,2}' 匹配至少1个，至多2个,
        'fivelittleducks' REGEXP 'duk{1,2}' 至少1个至多2个;
-/*-----------------逻辑运算符----------------------------*/
+7.4 逻辑运算符
 SELECT 5 AND 6,0 AND 7,0 AND NULL,3 AND NULL, 9 && 2,0 && 12, 0 && NULL, 14 && NULL;
 SELECT 5 OR 6, 0 OR 7, 0 OR 0, 3 OR NULL, 9 || 2, 0 || 12, 0 || NULL, 14 || NULL;
 SELECT NOT 0,NOT 5,NOT NULL,!3,!0,!NULL;
 SELECT 5 XOR 6, 0 XOR 0, NULL XOR NULL, 0 XOR 7, 0 XOR NULL, 3 XOR NULL;
-/*--------------------位运算符----------------------*/
+7.5 位运算符
 SELECT 3&6,BIN(3&6) 二进制数,3&6&7,BIN(3&6&7) 二进制数;
 SELECT 3|6,BIN(3|6) 二进制数,3|6|7,BIN(3|6|7) 二进制数;
 SELECT ~6,BIN(~6) 二进制数;
 SELECT 6^7,BIN(6^7) 二进制数;
 SELECT BIN(7) 二进制数,7<<4,BIN(7<<4) 二进制数,7>>2,BIN(7>>2) 二进制数;
-/*-----------------运算符的优先级----------------*/
+7.6 运算符的优先级
 /*
 1	！
 2	~
@@ -136,7 +155,7 @@ SELECT BIN(7) 二进制数,7<<4,BIN(7<<4) 二进制数,7>>2,BIN(7>>2) 二进制�
 13	||,OR,XOR
 14	:=
 从上到下，优先级依次降低*/
-/*-----综合示例，运算符的使用------------*/
+7.7 综合示例===运算符的使用
 CREATE TABLE TEST(
        NUM INT(4),
        INFO VARCHAR(100));
@@ -157,12 +176,13 @@ SELECT !3,!0,NOT NULL,4 XOR 0,2 XOR NULL,0 XOR NULL;
 SELECT 8&12,8|12,~13;
 SELECT 12<<3,155>>2;
 
-/*练习与面试题*/
+7.8 经典习题与面试题
+1.经典习题
 SELECT (13-4)*2,9+20/2,19 DIV 3,23%3;
 SELECT 54>24,32>=25,34<=43,12<=12,NULL<=>NULL,NULL<=>2,4<=>4;
 SELECT 7&&9,-4||NULL,NULL XOR 0,0 XOR1,!4;
 SELECT 15&19,15|8,12^20,~12;
-/*
+2.面试题及解答
 （1）比较运算符的结果只能是0和1吗？
 	是，逻辑运算结果也是0和1。
 （2）哪种运算符的优先级最高?
@@ -173,4 +193,6 @@ SELECT 15&19,15|8,12^20,~12;
 系统实现的。因此，位运算的操作数必须是十进制数，否则计算的结果就会是错误的。
 在使用位运算时，如果操作数是非十进制数时，要通过CONV()函数将操作数转换为十进制数。然后才能进行
 相应的位运算。
-*/
+7.9 本章小结
+  本章介绍了MySQL中的运算符。它们是算术运算符，比较运算符，逻辑运算符，位运算符及运算符的优先级。
+在实践中使用掌握。
