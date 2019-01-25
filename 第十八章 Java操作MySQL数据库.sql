@@ -37,10 +37,141 @@ String PASSWORD = "123456";
 Connection conn = DriverManager.getConnection(URL,USER,PASSWORD);
 18.2 Java操作MySQL数据库
     本节介绍Statement和PreparedStatement的用法。
-18.2.1 使用Statement执行SQL语句===executeQuery()查询
+18.2.1 使用Statement执行SQL语句———executeQuery()查询
     Statement接口是用于执行执行SQL语句的工具接口，有三种执行执行SQL语句的方法，即
 executeQuery()，execute()，executeUpdate()。接下来详细介绍这些方法的使用。
 【示例18-2】Statement使用executeQuery()方法执行SELECT语句，从本地数据库school_dml中
-查询表student和表score的学号，姓名，性别，班级号，成绩总分，具体步骤如下：
+查询表student和表score的学号，姓名，性别，年龄，班级号，成绩总分，具体步骤如下：
 步骤一：
+    首先在MySQL数据库系统查询，具体SQL语句如下，
+    SELECT st.stuid,st.name,st.gender,st.age,st.classno,sc.chinese+sc.math+sc.english total
+    FROM student st,score sc WHERE st.stuid=sc.stuid;
 步骤二：
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.lang.System;
+public class StatementQuery {
+    public static void main(String[]args)throws Exception{
+
+        //1.加载驱动
+		Class.forName("com.mysql.jdbc.Driver");
+        //2.使用DriverManager获取数据库连接
+		String URL ="jdbc:mysql://localhost:3306/school_dml?characterEncoding=utf-8";
+		String USER = "root";
+		String PASSWORD = "Rot-123456";
+		Connection conn = DriverManager.getConnection(URL,USER,PASSWORD);
+        //3.使用Connection来建立一个Statement对象
+		Statement stmt = conn.createStatement();
+        //4.executeQuery执行Select语句，返回查询到的结果集
+		ResultSet rs = stmt.executeQuery("SELECT st.stuid,st.name,st.gender,st.age,st.classno,sc.chinese+sc.math+sc.english total FROM student st,score sc WHERE st.stuid=sc.stuid");
+		//使用next()将指针下移一行
+		while(rs.next()){
+			System.out.println(rs.getInt(1)+"\t"
+			+rs.getString(2)+"\t\t"
+			+rs.getString(3)+"\t"
+			+rs.getInt(4)+"\t"
+			+rs.getInt(5)+"\t"
+			+rs.getInt(6));
+		}
+		if(rs != null)
+			rs.close();
+		if(stmt != null)
+			stmt.close();
+		if(conn != null)
+			conn.close();
+    }
+}
+18.2.2 使用Statement执行SQL语句———execute()查询
+【示例18-3】Statement使用execute()方法执行SELECT语句，从本地数据库school_dml中
+查询表student和表score的学号，姓名，性别，年龄，班级号，成绩总分，具体代码如下：
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.lang.System;
+public class StatementExecute {
+    public static void main(String[]args)throws Exception{
+
+        //1.加载驱动
+		Class.forName("com.mysql.jdbc.Driver");
+        //2.使用DriverManager获取数据库连接
+		String URL ="jdbc:mysql://localhost:3306/school_dml?characterEncoding=utf-8";
+		String USER = "root";
+		String PASSWORD = "Rot-123456";
+		Connection conn = DriverManager.getConnection(URL,USER,PASSWORD);
+        //3.使用Connection来建立一个Statement对象
+		Statement stmt = conn.createStatement();
+        //4.execute执行Select语句，返回查询到的结果集
+		boolean hasResultSet = stmt.execute("SELECT st.stuid,st.name,st.gender,st.age,st.classno,sc.chinese+sc.math+sc.english total FROM student st,score sc WHERE st.stuid=sc.stuid");
+		if(hasResultSet){
+			ResultSet rs = stmt.getResultSet();
+			//使用next()将指针下移一行
+			while(rs.next()){
+				System.out.println(rs.getInt(1)+"\t"
+				+rs.getString(2)+"\t\t"
+				+rs.getString(3)+"\t"
+				+rs.getInt(4)+"\t"
+				+rs.getInt(5)+"\t"
+				+rs.getInt(6));
+			}
+			if(rs != null)
+				rs.close();
+			if(stmt != null)
+				stmt.close();
+			if(conn != null)
+				conn.close();
+		}
+		
+    }
+}
+
+18.2.3 使用Statement执行SQL语句———executeUpdate()插入数据
+【示例18-4】Statement使用executeUpdate()方法执行INSERT语句，从本地数据库school_dml中
+向表student中插入一条数据，步骤如下：
+步骤一：使用SELECT语句查询表student。
+SELECT * FROM student;
+步骤二：向表t_student中插入一条数据，然后查询结果。
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.lang.System;
+public class StatementExecuteInsert {
+    public static void main(String[]args)throws Exception{
+
+        //1.加载驱动
+		Class.forName("com.mysql.jdbc.Driver");
+        //2.使用DriverManager获取数据库连接
+		String URL ="jdbc:mysql://localhost:3306/school_dml?characterEncoding=utf-8";
+		String USER = "root";
+		String PASSWORD = "Rot-123456";
+		Connection conn = DriverManager.getConnection(URL,USER,PASSWORD);
+        //3.使用Connection来建立一个Statement对象
+		Statement stmt = conn.createStatement();
+		stmt.executeUpdate("insert into student values(5,10005,\"Rebecca Rindell\",\"Female\",\"han\",23,3,\"pork\")");
+		ResultSet rs = stmt.executeQuery("select * from student");
+        //使用next()将指针下移一行
+        while(rs.next()){
+		System.out.println(rs.getInt(1)+"\t"
+        	+rs.getInt(2)+"\t\t"
+		+rs.getString(3)+"\t"
+        	+rs.getString(4)+"\t"
+        	+rs.getString(5)+"\t"
+        	+rs.getInt(6)+"\t"
+	        +rs.getInt(7)+"\t"
+		+rs.getString(8));
+        	}
+        	if(rs != null)
+			rs.close();
+        	if(stmt != null)
+        		stmt.close();
+        	if(conn != null)
+        		conn.close();
+		
+    }
+}
+18.2.4 使用Statement执行SQL语句———executeUpdate()修改数据
+【示例18-5】使用Statement的executeUpdate()方法执行Update语句，从本地数据库school_dml表student中
+修改一条数据，把stuid为1022的年龄修改为34，步骤如下：
