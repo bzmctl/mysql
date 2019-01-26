@@ -172,6 +172,324 @@ public class StatementExecuteInsert {
 		
     }
 }
+
 18.2.4 使用Statement执行SQL语句———executeUpdate()修改数据
 【示例18-5】使用Statement的executeUpdate()方法执行Update语句，从本地数据库school_dml表student中
-修改一条数据，把stuid为1022的年龄修改为34，步骤如下：
+修改一条数据，把stuid为10022的年龄修改为34，步骤如下：
+步骤一：查询student，
+SELECT * FROM student;
+步骤二：编写程序
+import java.lang.System;
+import java.sql.DriverManager;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.sql.ResultSet;
+public class StatementExecuteUpdate{
+    public static void main(String[] args)throws Exception{
+	Class.forName("com.mysql.jdbc.Driver");
+	String URL ="jdbc:mysql://localhost:3306/school_dml?characterEncoding=utf-8";
+	String USER ="root";
+	String PASSWORD="Rot-123456";
+	Connection conn = DriverManager.getConnection(URL,USER,PASSWORD);
+	Statement stmt = conn.createStatement();
+	stmt.executeUpdate("update student set age=34 where stuid=10022");
+	ResultSet rs = stmt.executeQuery("select * from student");
+	while(rs.next()){
+	System.out.println(rs.getInt(1)+"\t"
+		+rs.getInt(2)+"\t\t"
+		+rs.getString(3)+"\t"
+		+rs.getString(4)+"\t"
+		+rs.getString(5)+"\t"
+		+rs.getInt(6)+"\t"
+		+rs.getInt(7)+"\t"
+		+rs.getString(8));
+	}
+    if(rs != null)
+		rs.close();
+	if(stmt != null)
+		stmt.close();
+	if(conn != null)
+		conn.close();
+    }
+}
+步骤三：运行上述程序并显示结果
+javac -encoding utf-8 StatementExecuteUpdate.java
+java StatementExecuteUpdate
+
+18.2.5 使用Statement执行SQL语句———executeUpdate()删除数据
+【示例18-6】使用Statement的executeUpdate()方法执行Update语句，从本地数据库school_dml表student中
+删除一条数据，把stuid为10022的记录删除，步骤如下：
+步骤一：使用SELECT语句查询student表。
+SELECT * FROM student;
+步骤二：编写程序
+import java.lang.System;
+import java.sql.DriverManager;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.sql.ResultSet;
+public class StatementExecuteDelete{
+    public static void main(String[] args)throws Exception{
+	Class.forName("com.mysql.jdbc.Driver");
+	String URL ="jdbc:mysql://localhost:3306/school_dml?characterEncoding=utf-8";
+	String USER ="root";
+	String PASSWORD="Rot-123456";
+	Connection conn = DriverManager.getConnection(URL,USER,PASSWORD);
+	Statement stmt = conn.createStatement();
+	stmt.executeUpdate("DELETE FROM student WHERE stuid=10022");
+	ResultSet rs = stmt.executeQuery("select * from student");
+	while(rs.next()){
+		System.out.println(rs.getInt(1)+"\t"
+		+rs.getInt(2)+"\t\t"
+		+rs.getString(3)+"\t"
+		+rs.getString(4)+"\t"
+		+rs.getString(5)+"\t"
+		+rs.getInt(6)+"\t"
+		+rs.getInt(7)+"\t"
+		+rs.getString(8));
+		}
+    if(rs != null)
+		rs.close();
+    if(stmt != null)
+		stmt.close();
+    if(conn != null)
+		conn.close();
+    }
+}
+步骤三：编译运行程序
+javac -encoding utf-8 StatementExecuteDelete.java
+java StatementExecuteDelete
+
+18.2.6 使用PreparedStatement执行SQL语句———executeQuery()查询
+好处：效率比Statement高；防止SQL注入攻击。
+PreparedStatement也有三种方法，即executeQuery()、execute()和executeUpdate()。
+【示例18-7】使用PrepraredStatement的executeQuery()方法执行SELECT语句，从数据库
+school_dml中student表和score表查询学号为10001的学生的学号、姓名、性别、年龄、班级号、
+成绩总分，具体步骤如下：
+步骤一：在MySQL数据库中执行查询语句：
+SELECT st.stuid,st.name,st.gender,st.age,st.classno,sc.chinese+sc.math+sc.english total
+FROM student st JOIN score sc ON st.stuid=sc.stuid AND st.stuid=10001;
+步骤二：
+import java.lang.System;
+import java.sql.DriverManager;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+public class PreparedStatementExecuteQuery{
+    public static void main(String[] args)throws Exception{
+	Class.forName("com.mysql.jdbc.Driver");
+	String URL ="jdbc:mysql://localhost:3306/school_dml?characterEncoding=utf-8";
+	String USER ="root";
+	String PASSWORD="Rot-123456";
+	Connection conn = DriverManager.getConnection(URL,USER,PASSWORD);
+	String strSql="SELECT st.stuid,st.name,st.gender,st.age,st.classno,sc.chinese+sc.math+sc.english total FROM student st JOIN score sc ON st.stuid=sc.stuid AND st.stuid=?";
+	PreparedStatement pstmt = conn.prepareStatement(strSql);
+	pstmt.setInt(1,10001);
+	ResultSet rs = pstmt.executeQuery();
+	while(rs.next()){
+		System.out.println(rs.getInt(1)+"\t"
+        +rs.getString(2)+"\t\t"
+		+rs.getString(3)+"\t"
+        +rs.getInt(4)+"\t"
+        +rs.getInt(5)+"\t"
+		+rs.getInt(6));
+    }
+    if(rs != null)
+		rs.close();
+    if(pstmt != null)
+        pstmt.close();
+    if(conn != null)
+        conn.close();
+    }
+}
+步骤三：编译运行上面程序，得到显示结果
+javac -encoding utf-8 PreparedStatementExecuteQuery.java
+java PreparedStatementExecuteQuery
+
+18.2.7 使用PreparedStatement执行SQL语句———execute()查询
+【示例18-8】使用PreparedStatement的execute()方法执行SELECT语句，从本地计算机
+的MySQL数据库系统的school_dml数据库中学生表student和分数表score中查询学生的学号
+为10001的学号、姓名、性别、年龄、班级号、成绩总分，具体步骤如下：
+步骤一：编写程序PreparedStatementExecute.java
+import java.lang.System;
+import java.sql.DriverManager;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+public class PreparedStatementExecute{
+    public static void main(String[] args)throws Exception{
+	Class.forName("com.mysql.jdbc.Driver");
+	String URL ="jdbc:mysql://localhost:3306/school_dml?characterEncoding=utf-8";
+	String USER ="root";
+	String PASSWORD="Rot-123456";
+	Connection conn = DriverManager.getConnection(URL,USER,PASSWORD);
+	String strSql="SELECT st.stuid,st.name,st.gender,st.age,st.classno,sc.chinese+sc.math+sc.english total FROM student st JOIN score sc ON st.stuid=sc.stuid AND st.stuid=?";
+	PreparedStatement pstmt = conn.prepareStatement(strSql);
+	pstmt.setInt(1,10001);
+	boolean hasResultSet = pstmt.execute();
+	if(hasResultSet){
+	    ResultSet rs = pstmt.getResultSet();
+	    while(rs.next()){
+		System.out.println(rs.getInt(1)+"\t"
+        +rs.getString(2)+"\t\t"
+		+rs.getString(3)+"\t"
+        +rs.getInt(4)+"\t"
+        +rs.getInt(5)+"\t"
+		+rs.getInt(6));
+		}
+		if(rs != null)
+			rs.close();
+	}
+    if(pstmt != null)
+        pstmt.close();
+    if(conn != null)
+        conn.close();
+    }
+}
+步骤二：编译并运行程序
+javac -encoding utf-8 PreparedStatementExecute.java
+java PreparedStatementExecute
+
+18.2.8 使用PreparedStatement执行SQL语句———executeUpdate()插入数据
+【示例18-9】使用PreparedStatement的executeUpdate()方法执行INSERT语句，从本地
+计算机MySQL数据库系统school_dml中的学生表student中插入一条数据，具体步骤如下：
+步骤一：用SELECT语句查询student表，具体SQL语句如下，
+SELECT * FROM student;
+步骤二：编写程序
+import java.lang.System;
+import java.sql.DriverManager;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+public class PreparedStatementExecuteInsert{
+    public static void main(String[] args)throws Exception{
+	Class.forName("com.mysql.jdbc.Driver");
+	String URL ="jdbc:mysql://localhost:3306/school_dml?characterEncoding=utf-8";
+	String USER ="root";
+	String PASSWORD="Rot-123456";
+	Connection conn = DriverManager.getConnection(URL,USER,PASSWORD);
+	String strSql="INSERT INTO student VALUES(?,?,?,?,?,?,?,?)";
+	PreparedStatement pstmt = conn.prepareStatement(strSql);
+	pstmt.setInt(1,3);
+	pstmt.setInt(2,10003);
+	pstmt.setString(3,"Jim");
+	pstmt.setString(4,"Female");
+	pstmt.setString(5,"zhuang");
+	pstmt.setInt(6,30);
+	pstmt.setInt(7,1);
+	pstmt.setString(8,"beef");
+	pstmt.executeUpdate();
+	ResultSet rs = pstmt.executeQuery("select * from student");
+	while(rs.next()){
+	    System.out.println(rs.getInt(1)+"\t"
+			       +rs.getInt(2)+"\t"
+			       +rs.getString(3)+"\t\t"
+			       +rs.getString(4)+"\t"
+			       +rs.getString(5)+"\t"
+			       +rs.getInt(6)+"\t"
+			       +rs.getInt(7)+"\t"
+			       +rs.getString(8));
+	}
+	    if(rs != null)
+		rs.close();
+	    if(pstmt != null)
+		pstmt.close();
+            if(conn != null)
+		conn.close();
+    }
+}
+步骤三：
+javac -encoding utf-8 PreparedStatementExecuteInsert.java
+java PreparedStatementExecuteInsert
+
+18.2.9 使用PreparedStatement执行SQL语句———executeUpdate()修改数据
+【示例18-10】使用PreparedStatement的executeUpdate()方法执行Update语句，从本地数据库school_dml表student中
+修改一条数据，把stuid为10002的年龄修改为34，步骤如下：
+步骤一：查询student，
+SELECT * FROM student;
+步骤二：编写程序
+import java.lang.System;
+import java.sql.DriverManager;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+public class PreparedStatementExecuteUpdate{
+    public static void main(String[] args)throws Exception{
+	Class.forName("com.mysql.jdbc.Driver");
+	String URL ="jdbc:mysql://localhost:3306/school_dml?characterEncoding=utf-8";
+	String USER ="root";
+	String PASSWORD="Rot-123456";
+	Connection conn = DriverManager.getConnection(URL,USER,PASSWORD);
+	String strSql="UPDATE student SET age=? WHERE stuid=?";
+	PreparedStatement pstmt = conn.prepareStatement(strSql);
+	pstmt.setInt(1,34);
+	pstmt.setInt(2,10002);
+	pstmt.executeUpdate();
+	ResultSet rs = pstmt.executeQuery("select * from student");
+	while(rs.next()){
+	    System.out.println(rs.getInt(1)+"\t"
+			       +rs.getInt(2)+"\t"
+			       +rs.getString(3)+"\t\t"
+			       +rs.getString(4)+"\t"
+			       +rs.getString(5)+"\t"
+			       +rs.getInt(6)+"\t"
+			       +rs.getInt(7)+"\t"
+			       +rs.getString(8));
+	}
+	    if(rs != null)
+		rs.close();
+	    if(pstmt != null)
+		pstmt.close();
+            if(conn != null)
+		conn.close();
+    }
+}
+步骤三：编译并运行程序
+javac -encoding utf-8 PreparedStatementExecuteUpdate.java
+java PreparedStatementExecuteUpdate
+
+18.2.10 使用PreparedStatement执行SQL语句———executeUpdate()删除数据
+【示例18-10】使用PreparedStatement的executeUpdate()方法执行Update语句，从本地数据库school_dml表student中
+删除一条数据，把stuid为10002的学生删除，步骤如下：
+步骤一：查询student，
+SELECT * FROM student;
+步骤二：编写程序
+import java.lang.System;
+import java.sql.DriverManager;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+public class PreparedStatementExecuteDelete{
+    public static void main(String[] args)throws Exception{
+	Class.forName("com.mysql.jdbc.Driver");
+	String URL ="jdbc:mysql://localhost:3306/school_dml?characterEncoding=utf-8";
+	String USER ="root";
+	String PASSWORD="Rot-123456";
+	Connection conn = DriverManager.getConnection(URL,USER,PASSWORD);
+	String strSql="DELETE FROM student WHERE stuid=?";
+	PreparedStatement pstmt = conn.prepareStatement(strSql);
+	pstmt.setInt(1,10002);
+	pstmt.executeUpdate();
+	ResultSet rs = pstmt.executeQuery("select * from student");
+	while(rs.next()){
+	    System.out.println(rs.getInt(1)+"\t"
+			       +rs.getInt(2)+"\t"
+			       +rs.getString(3)+"\t\t"
+			       +rs.getString(4)+"\t"
+			       +rs.getString(5)+"\t"
+			       +rs.getInt(6)+"\t"
+			       +rs.getInt(7)+"\t"
+			       +rs.getString(8));
+	}
+	    if(rs != null)
+		rs.close();
+	    if(pstmt != null)
+		pstmt.close();
+            if(conn != null)
+		conn.close();
+    }
+}
+步骤三：编译并运行程序
+javac -encoding utf-8 PreparedStatementExecuteDelete.java
+java PreparedStatementExecuteDelete
+
+18.3 Java备份和恢复MySQL数据库
