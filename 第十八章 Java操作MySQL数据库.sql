@@ -493,3 +493,54 @@ javac -encoding utf-8 PreparedStatementExecuteDelete.java
 java PreparedStatementExecuteDelete
 
 18.3 Java备份和恢复MySQL数据库
+  MySQL备份语句为：
+  mysqldump -u username -p dbname table1 table2 ... >BackupName.sql
+  Java语言中的Runtime类的exec()方法可以执行外部命令。调用exec()方法的代码如下：
+  Runtime rt = Runtime.getRuntime();
+  rt.exec("命令语句");
+【示例18-12】在Windows、Linux、Mac三种操作系统下分别使用Java备份数据库。
+public class ExecuteMysqldumpComand{
+    public static void main(String[] args){
+	//windows
+	//	String command = "cmd /c"+"mysqldump -uroot -pRot-123456 --databases myBill>E:\\wt\\workspace\\mysql\\backup\\myBill.sql";
+	//linux
+	//String command = "/bin/sh"+"-c"+"/usr/bin/mysqldump -uroot -pRot-123456 --databases mybill>/var/backup/mybill.sql";
+	String command = "sh /root/jdbc/mysqldump.sh";
+	//mac  未测试
+	//String command = "/usr/local/mysql/mysqldump -uroot -pRot-123456 --databases mybill>/var/backup/mybill.sql";
+	executeCommand(command);
+    }
+    private static void executeCommand(String command){
+	try{
+	    Runtime.getRuntime().exec(command);
+	}
+	catch (Exception e){
+	    e.printStackTrace();
+	}
+
+    }
+}
+【示例18-13】在Windows、Linux、Mac三种操作系统下分别使用Java恢复数据库。
+public class ExecuteMysqldumpComand2{
+    public static void main(String[] args){
+	//windows
+	//String command = "cmd /c"+"mysql -uroot -pRot-123456 myBill<E:\\wt\\workspace\\mysql\\backup\\myBill.sql";
+	//linux
+	//String command = "/bin/sh"+"-c"+"/usr/bin/mysql -uroot -pRot-123456 mybill</var/backup/mybill.sql";
+	String command = "sh /root/jdbc/mysqldump2.sh";
+	//mac  未测试
+	//String command = "/usr/local/mysql/mysql -uroot -pRot-123456 mybill</var/backup/mybill.sql";
+	executeCommand(command);
+    }
+    private static void executeCommand(String command){
+	try{
+	    Runtime.getRuntime().exec(command);
+	}
+	catch (Exception e){
+	    e.printStackTrace();
+	}
+
+    }
+}
+
+18.4 综合示例———人力资源管理系统
