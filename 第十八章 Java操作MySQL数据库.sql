@@ -544,3 +544,371 @@ public class ExecuteMysqldumpComand2{
 }
 
 18.4 综合示例———人力资源管理系统
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+public class DBUtils{
+    public static final String DRIVER = "com.mysql.jdbc.Driver";
+    public static final String URL = "jdbc:mysql://localhost:3306/hrmsdb?characterEncoding=utf-8";
+    public static final String USER = "root";
+    public static final String PASSWORD = "Rot-123456";
+    private static Connection conn = null;
+    public static Connection getConnection()throws Exception{
+	Class.forName(DRIVER);
+	conn = DriverManager.getConnection(URL,USER,PASSWORD);
+	return conn;
+    }
+    public static void closeConnection()throws Exception{
+	if(conn != null && conn.isClosed()){
+	    conn.close();
+	    conn = null;
+	}
+    }
+    public int executeUpdate(String sql)throws Exception{
+	getConnection();
+	Statement st = conn.createStatement();
+	int r = st.executeUpdate(sql);
+	closeConnection();
+	return r;
+    }
+    public static int executeUpdate(String sql,Object...obj)throws Exception{
+	getConnection();
+	PreparedStatement pst = conn.prepareStatement(sql);
+	if(obj != null && obj.length > 0)
+	    for(int i = 0; i < obj.length; i++)
+		pst.setObject(i+1,obj[i]);
+	int r = pst.executeUpdate();
+	closeConnection();
+	return r;
+    }
+    public static ResultSet executeQuery(String sql,Object...obj)throws Exception{
+	getConnection();
+	PreparedStatement pst = conn.prepareStatement(sql);
+	if(obj != null && obj.length > 0)
+	    for(int i = 0; i < obj.length; i++)
+		pst.setObject(i+1,obj[i]);
+	ResultSet rs = pst.executeQuery();
+	return rs;
+    }
+    public static boolean queryLogin(String name,String password)throws Exception{
+	//String sql = "select name from t_user where name=? and password=?";
+	//ResultSet rs = executeQuery(sql,name,password);
+	String sql = "select name from t_user where name=?";
+	ResultSet rs = executeQuery(sql,name);
+	if(rs.next())
+	    return true;
+	else
+	    return false;
+    }
+}
+
+import java.util.Scanner;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+public class Hrms{
+    public static Scanner sc = new Scanner(System.in);
+    public static void mainInterface(){
+	while(true){
+	    System.out.println("欢迎使用人力资源管理系统");
+	    System.out.println("1.查看员工信息");
+	    System.out.println("2.添加员工信息");
+	    System.out.println("3.修改员工信息");
+	    System.out.println("4.删除员工信息");
+	    System.out.println("0.退出系统");
+	    System.out.println("请选择：");
+	    int num = sc.nextInt();
+	    switch(num){
+	    case 1:
+		query();
+		break;
+	    case 2:
+		add();
+		break;
+	    case 3:
+		update();
+		break;
+	    case 4:
+		del();
+		break;
+	    case 0:
+		System.out.println("谢谢使用！");
+		System.exit(0);
+	    default:
+		System.out.println("没这个选项，请重新输入！");
+	    }
+	}
+
+    }
+    private static void query(){
+	System.out.println("查询员工信息：(a:全部，b:单个),请选择：");
+	String num = sc.next();
+	String sql = null;
+	try{
+	    switch(num){
+	    case "a":
+		sql = "select * from t_employee";
+		ResultSet rsa = DBUtils.executeQuery(sql);
+		System.out.println("编号\t姓名\t性别\t年龄");
+		while(rsa.next()){
+		    int id = rsa.getInt(1);
+		    String name = rsa.getString(2);
+		    String gender = rsa.getString(3);
+		    int age = rsa.getInt(4);
+		    System.out.println(id+"\t"+name+"\t"+gender+"\t"+age);
+		}
+		break;
+	    case "b":
+		System.out.println("请输入要查询员工的id：");
+		int idnum = sc.nextInt();
+		sql = "select * from t_employee where id=?";
+		ResultSet rsb = DBUtils.executeQuery(sql,idnum);
+		System.out.println("编号\t姓名\t性别\t年龄");
+		while(rsb.next()){
+		    int id = rsb.getInt(1);
+		    String name = rsb.getString(2);
+		    String gender = rsb.getString(3);
+		    int age = rsb.getInt(4);
+		    System.out.println(id+"\t"+name+"\t"+gender+"\t"+age);
+		}
+		break;
+	    default:
+		System.out.println("无此选项，请重新输入！");
+		break;
+	    }
+	}catch(SQLException e){
+	    System.out.println("db error"+e.getMessage());
+	    e.printStackTrace();
+	}catch(Exception e){
+	    System.out.println("other error"+e.getMessage());
+	    e.printStackTrace();
+	}finally{
+	    try{
+		DBUtils.closeConnection();
+	    }catch(Exception e){
+		System.out.println(e.getMessage());
+	    }
+	}
+    }
+    private static void add(){
+	System.out.println("\t新增员工");
+	System.out.println("姓名：");
+	String name = sc.next();
+	System.out.println("性别：");
+	String gender = sc.next();
+	System.out.println("年龄：");
+	int age = sc.nextInt();
+	String sql = "INSERT INTO t_employee(name,gender,age) VALUES(?,?,?)";
+	try{
+	    DBUtils.executeUpdate(sql,name,gender,age);
+	    System.out.println("新增成功！");
+	}catch(Exception e){
+	    System.out.println("error："+e.getMessage());
+	}finally{
+	    try{
+		DBUtils.closeConnection();
+	    }catch(Exception e){
+		e.printStackTrace();
+	    }
+	}
+    }
+    private static void update(){
+	String sql1 = "select * from t_employee where id=?";
+	String sql2 = "update t_employee set name=? where id=?";
+	String sql3 = "update t_employee set gender=? where id=?";
+	String sql4 = "update t_employee set age=? where id=?";
+	System.out.println("请输入要修改的员工的id：");
+	int idnum = sc.nextInt();
+	try{
+	    ResultSet rs = DBUtils.executeQuery(sql1,idnum);
+	    System.out.println("编号\t姓名\t性别\t年龄");
+	    while(rs.next()){
+		int id = rs.getInt(1);
+		String name = rs.getString(2);
+		String gender = rs.getString(3);
+		int age = rs.getInt(4);
+		System.out.println(id+"\t"+name+"\t"+gender+"\t"+age);
+	    }
+	    System.out.println("你确认要修改此人信息吗？y/n:");
+	    String yorn = sc.next();
+	    if("y".equals(yorn)){
+		System.out.println("修改选项：a、姓名，b、性别，c、年龄：");
+		String abc = sc.next();
+		if("a".equals(abc)){
+		    System.out.println("请输入姓名：");
+		    String iname = sc.next();
+		    DBUtils.executeUpdate(sql2,iname,idnum);
+		}else if("b".equals(abc)){
+		    System.out.println("请输入性别：");
+		    String igender = sc.next();
+		    DBUtils.executeUpdate(sql3,igender,idnum);
+		}else if("c".equals(abc)){
+		    System.out.println("请输入年龄：");
+		    String iage = sc.next();
+		    DBUtils.executeUpdate(sql4,iage,idnum);
+		}else{
+		    System.out.println("输入错误！");
+		}
+		System.out.println("修改成功！");
+	    }else
+		System.out.println("取消修改！");
+	}catch(Exception e){
+	    System.out.println(e.getMessage());
+	}finally{
+	    try{
+		DBUtils.closeConnection();
+	    }catch(Exception e){
+		e.printStackTrace();
+	    }
+	}
+    }
+    private static void del(){
+	String sql1 = "select * from t_employee where id=?";
+	String sql2 = "delete from t_employee where id=?";
+	System.out.println("请输入要删除的员工的id：");
+	int idnum = sc.nextInt();
+	ResultSet rs = null;
+	try{
+	    rs = DBUtils.executeQuery(sql1,idnum);
+	    System.out.println("编号\t姓名\t性别\t年龄");
+	    while(rs.next()){
+		int id = rs.getInt(1);
+		String name = rs.getString(2);
+		String gender = rs.getString(3);
+		int age = rs.getInt(4);
+		System.out.println(id+"\t"+name+"\t"+gender+"\t"+age);
+	    }
+	    System.out.println("你确认要删除此人信息吗？y/n:");
+	    String yorn = sc.next();
+	    if("y".equals(yorn)){
+		DBUtils.executeUpdate(sql2,idnum);
+		System.out.println("删除成功！");
+	    }else
+		System.out.println("取消删除！");
+	}catch(Exception e){
+	    System.out.println(e.getMessage());
+	}finally{
+	    try{
+		DBUtils.closeConnection();
+	    }catch(Exception e){
+		e.printStackTrace();
+	    }
+	}
+    }
+}
+
+import java.util.Scanner;
+public class Login{
+    private static Scanner sc = new Scanner(System.in);
+    public static void register()throws Exception{
+	System.out.println("****欢迎注册人力资源管理系统****");
+	String sql = "insert into t_user(name,password) values(?,?)";
+	while(true){
+	    System.out.println("请输入用户名：");
+	    String iname = sc.next();
+	    System.out.println("请设置密码：");
+	    String ipassword = sc.next();
+	    boolean b = DBUtils.queryLogin(iname,ipassword);
+	    if(b){
+		System.out.println("该用户已经存在，请重新输入：");
+	    }else{
+		DBUtils.executeUpdate(sql,iname,ipassword);
+		System.out.println("注册成功！欢迎登陆！是否立即登陆?y/n");
+		String yorn = sc.next();
+		if("y".equals(yorn)){
+		    login();
+		}
+		break;
+	    }
+	}
+    }
+    public static void login()throws Exception{
+	int count = 0;
+	System.out.println("****欢迎登陆人力资源管理系统****");
+	while(true){
+	    System.out.println("请输入用户名：");
+	    String iname = sc.next();
+	    System.out.println("请输入密码：");
+	    String ipassword = sc.next();
+	    boolean b = DBUtils.queryLogin(iname,ipassword);
+	    if(b){
+		Hrms.mainInterface();
+	    }else{
+		count++;
+		System.out.println("账号密码不匹配，请重新输入！");
+	    }
+	    if(count>2){
+		System.out.println("您已经连续三次输入错误，已退出！");
+		break;
+	    }
+	}
+    }
+    public static void updatePassword()throws Exception{
+	System.out.println("****请登陆后修改密码****");
+	int count = 0;
+	while(true){
+	    System.out.println("请输入用户名：");
+	    String iname = sc.next();
+	    System.out.println("请输入密码：");
+	    String ipassword = sc.next();
+	    boolean b = DBUtils.queryLogin(iname,ipassword);
+	    if(b){
+		System.out.println("-----修改密码-----");
+		System.out.println("请输入新的密码");
+		String newPassword = sc.next();
+		String sql = "update t_user set password=? where name=?";
+		DBUtils.executeUpdate(sql,newPassword,iname);
+		System.out.println("修改成功，请重新登陆！");
+		login();
+	    }else{
+		count++;
+		System.out.println("账号密码不匹配，请重新输入！");
+	    }
+	    if(count>2){
+		System.out.println("您已经连续三次输入错误，已退出！");
+		break;
+	    }
+	}
+    }
+}
+
+import java.util.Scanner;
+public class MainLogin{
+    public static void main(String[] args)throws Exception{
+	Scanner sc = new Scanner(System.in);
+	while(true){
+	    System.out.println("*****欢迎登陆人力资源管理系统*****");
+	    System.out.println("*1.注册|2.登陆|3.修改密码|0.退出*");
+	    System.out.println("请选择：");
+	    int num = sc.nextInt();
+	    if(num == 0){
+		System.out.println("\n Thanks For Your Use!");
+		break;
+	    }else{
+		switch(num){
+		case 1:
+		    Login.register();
+		    break;
+		case 2:
+		    Login.login();
+		    break;
+		case 3:
+		    Login.updatePassword();
+		    break;
+		default:
+		    System.out.println("输入错误，请重新输入！");
+		}
+	    }
+	}
+	sc.close();
+    }
+}
+
+18.5 本章总结
+    本章介绍了Java访问MySQL数据库的方法。Java连接和操作MySQL数据库是本章重点。
+连接部分详细介绍了如何通过JDBC连接MySQL数据库。在Java操作MySQL数据库分别介绍了
+Statement和PreparedStatement两个方面，它们在Java中执行SELECT,INSER,UPDATE,DELETE
+语句的方法。Java备份和恢复MySQL数据库是本章难点，因为Java需要调用外部命令。
+最后通过一个综合示例，介绍了Java连接和操作MySQL数据库的方法。下一章介绍网上课堂系统设计
+方案。
