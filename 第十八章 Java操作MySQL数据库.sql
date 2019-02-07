@@ -544,6 +544,28 @@ public class ExecuteMysqldumpComand2{
 }
 
 18.4 综合示例———人力资源管理系统
+步骤一：创建数据库hrmsdb。
+CREATE DATABASE hrmsdb;
+USE hrmsdb;
+步骤二：创建员工表。
+CREATE TABLE `t_employee` (
+  `id` int(8) NOT NULL AUTO_INCREMENT,
+  `name` varchar(10) NOT NULL,
+  `gender` varchar(1) NOT NULL,
+  `age` int(3) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+步骤三：创建用户表。
+CREATE TABLE `t_user` (
+  `id` int(8) NOT NULL AUTO_INCREMENT,
+  `name` varchar(10) NOT NULL,
+  `password` varchar(10) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+步骤四：查询员工表和用户表数据。
+SELECT * FROM t_employee;
+SELECT * FROM t_user;
+步骤五：编写工具类DBUtils用于操作数据库，供业务层调用。
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -603,7 +625,8 @@ public class DBUtils{
 	    return false;
     }
 }
-
+步骤六：编写人力资源管理类Hrms，调用DBUtils，用于实现对员工信息的增、删、改、查，
+必须在登陆之后。
 import java.util.Scanner;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -797,7 +820,7 @@ public class Hrms{
 	}
     }
 }
-
+步骤七：编写用户管理类Login，提供用户账号注册、登陆、修改密码。
 import java.util.Scanner;
 public class Login{
     private static Scanner sc = new Scanner(System.in);
@@ -872,7 +895,7 @@ public class Login{
 	}
     }
 }
-
+步骤八：编写登陆的入口，程序入口类MainLogin。
 import java.util.Scanner;
 public class MainLogin{
     public static void main(String[] args)throws Exception{
@@ -904,7 +927,7 @@ public class MainLogin{
 	sc.close();
     }
 }
-
+步骤九：运行程序，跑完所有程序分支。
 18.5 本章总结
     本章介绍了Java访问MySQL数据库的方法。Java连接和操作MySQL数据库是本章重点。
 连接部分详细介绍了如何通过JDBC连接MySQL数据库。在Java操作MySQL数据库分别介绍了
